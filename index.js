@@ -14,55 +14,41 @@ app.use(cors({ optionsSuccessStatus: 200 }));
 // http://expressjs.com/en/starter/static-files.html
 app.use(express.static('public'));
 
+
+//valid date function
+const isInvalidDate = (date) => date.toUTCString() == "Invalid Date";
+
 // http://expressjs.com/en/starter/basic-routing.html
 app.get("/", function (req, res) {
     res.sendFile(__dirname + '/views/index.html');
 });
 
-function isValidDateString(dateString) {
-    const date = new Date(dateString);
-    return !isNaN(date.getTime());
-}
-
-function isValidDateNumber(dateNumber) {
-    const date = new Date(dateNumber);
-    return date == "Invalid Date" ? false : true;
-}
-
-
-// your first API endpoint... 
+//return current date
 app.get("/api", function (req, res) {
-    const unix = new Date().getTime();
-    const utc = new Date().toUTCString();
-    res.json({ unix, utc });
+    res.json({
+        unix: new Date().getTime(),
+        utc: new Date().toUTCString()
+    });
 });
 
-
+//return date based on given string or number 
 app.get("/api/:date", function (req, res) {
-    const { date } = req.params;
-    let unix;
-    let utc;
+    let dateValue = req.params.date;
+    let date = new Date(dateValue);
 
-    if (String(date).includes("-") && isNaN(Number(date))) {
-        if (!isValidDateString(date)) {
-            res.json({ error: "Invalid Date" });
-            return;
-        }
-        const myDate = new Date(String(date));
-        unix = Number.parseInt(myDate.getTime());
-        utc = myDate.toUTCString();
-
-    } else {
-        unix = parseInt(date);
-        utc = new Date(unix).toUTCString();
-
-        if (!isValidDateNumber(unix)) {
-            res.json({ error: "Invalid Date" });
-            return;
-        }
+    if (isInvalidDate(date)) {
+        date = new Date(+dateValue);
     }
 
-    res.json({ unix, utc });
+    if (isInvalidDate(date)) {
+        res.json({ error: "Invalid Date" });
+        return;
+    }
+
+    res.json({
+        unix: date.getTime(),
+        utc: date.toUTCString()
+    });
 });
 
 
